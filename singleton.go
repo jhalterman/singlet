@@ -14,22 +14,9 @@ type Singleton struct {
 	mtx sync.Mutex
 }
 
-// Get returns a previously created value for the singleton, else the default value for T. This function is threadsafe.
-// Returns ErrTypeMismatch if the requested type does not match a type that was previously stored in the singleton.
-func Get[T any](singleton *Singleton) (T, error) {
-	maybeResult := singleton.p.Load()
-	if maybeResult == nil {
-		return *new(T), nil
-	}
-	result, ok := (*maybeResult).(T)
-	if !ok {
-		return *new(T), ErrTypeMismatch
-	}
-	return result, nil
-}
-
-// GetOrDo returns a previously created value for the singleton, else it creates and returns a new one by calling fn. This function is threadsafe.
-// Returns ErrTypeMismatch if the requested type does not match a type that was previously stored in the singleton.
+// GetOrDo will create and store a value in the Singleton, if one doesn't already exist, by calling the fn, else it will return the existing value.
+// Returns ErrTypeMismatch if the requested type does not match a type the existing singleton type.
+// This function is threadsafe.
 func GetOrDo[T any](singleton *Singleton, fn func() T) (result T, err error) {
 	maybeResult := singleton.p.Load()
 	if maybeResult == nil {
@@ -49,6 +36,21 @@ func GetOrDo[T any](singleton *Singleton, fn func() T) (result T, err error) {
 
 	var ok bool
 	result, ok = (*maybeResult).(T)
+	if !ok {
+		return *new(T), ErrTypeMismatch
+	}
+	return result, nil
+}
+
+// Get returns a previously created value for the singleton, else the default value for T.
+// Returns ErrTypeMismatch if the requested type does not match a type the existing singleton type.
+// This function is threadsafe.
+func Get[T any](singleton *Singleton) (T, error) {
+	maybeResult := singleton.p.Load()
+	if maybeResult == nil {
+		return *new(T), nil
+	}
+	result, ok := (*maybeResult).(T)
 	if !ok {
 		return *new(T), ErrTypeMismatch
 	}

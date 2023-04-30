@@ -5,15 +5,15 @@
 [![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 [![Godoc](https://pkg.go.dev/badge/github.com/jhalterman/singlet)](https://pkg.go.dev/github.com/jhalterman/singlet)
 
-A threadsafe generic singleton implementation for Golang.
+Singlet provides threadsafe, generic singletons for Golang.
 
 ## Motivation
 
-The common pattern of using a global `sync.Once` to implement a global singleton doesn't work well when the singleton value includes a generic type. Singlet provides a solution, allowing you to create generic, threadsafe singletons.
+The common pattern of using `sync.Once` to implement a global singleton doesn't work well when the singleton value includes a generic type. Singlet provides a solution, allowing you to create generic, threadsafe singletons, anywhere in your code.
 
 ## Example
 
-To use singlet, create a `*Singleton`, then call `GetOrDo` while will get a previously created value for the `Singleton` else create a new value with the provided func. Only a single value will ever be created per `Singleton`:
+To use singlet, first create a `Singleton`. Then call `GetOrDo` which will create and store a value in the `Singleton`, if one doesn't already exist, by calling the provided `func`, else it will return the existing value:
 
 ```go
 makeFoo := func() *Foo[int] {
@@ -32,7 +32,19 @@ if foo1 != foo2 {
 You can also get a previously created value for a `Singleton`:
 
 ```go
-foo := singlet.Get(singleton)
+foo, _ := singlet.Get[Foo](singleton)
+```
+
+### Possible Errors
+
+Calling `Get` or `GetOrDo` for a result type that doesn't match the previously stored result type for a `Singleton` will result in an `ErrTypeMismatch`:
+
+```go
+s := &singlet.Singleton{}
+singlet.GetOrDo(s, func() int {
+    return 1
+})
+_, err := singlet.Get[string](s) // Returns ErrTypeMismatch
 ```
 
 ## License
