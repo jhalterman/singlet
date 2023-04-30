@@ -1,4 +1,4 @@
-module singlet
+module github.com/jhalterman/singlet
 
 go 1.20
 
