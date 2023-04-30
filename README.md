@@ -18,7 +18,7 @@ To use singlet, first create a `Singleton`. Then call `GetOrDo` which will creat
 ```go
 var s = &singlet.Singleton{}
 cache1, _ := singlet.GetOrDo(s, cache.New[int]) 
-cache2, _ := singlet.GetOrDo(s, cache.New[int]) // makeFoo is only called once
+cache2, _ := singlet.GetOrDo(s, cache.New[int]) // cache.New is only called once
 
 if cache1 != cache2 {
     panic("caches should be equal")

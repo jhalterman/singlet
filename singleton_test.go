@@ -1,6 +1,7 @@
 package singlet
 
 import (
+	"errors"
 	"sync"
 	"testing"
 
@@ -12,29 +13,31 @@ type Foo[T any] struct {
 }
 
 var (
-	fn1 = func() Foo[int] {
-		return Foo[int]{t: 1}
+	fn1 = func() (Foo[int], error) {
+		return Foo[int]{t: 1}, nil
 	}
-	fn2 = func() Foo[int] {
-		return Foo[int]{t: 2}
+	fn2 = func() (Foo[int], error) {
+		return Foo[int]{t: 2}, nil
 	}
-	fn1Ptr = func() *Foo[int] {
-		return &Foo[int]{t: 1}
+	fn1Ptr = func() (*Foo[int], error) {
+		return &Foo[int]{t: 1}, nil
 	}
-	fn2Ptr = func() *Foo[int] {
-		return &Foo[int]{t: 2}
+	fn2Ptr = func() (*Foo[int], error) {
+		return &Foo[int]{t: 2}, nil
 	}
 )
 
 func TestGetOrDo(t *testing.T) {
 	t.Run("should return same value for T", func(t *testing.T) {
 		// Asseert fn1 and fn2 produce different results
-		assert.NotEqual(t, fn1(), fn2())
+		foo1, err1 := fn1()
+		foo2, err2 := fn2()
+		assert.NotEqual(t, foo1, foo2)
 
 		// Assert GetOrDo(s, fn1) and GetOrDo(s, fn2) produce the same result
 		s := &Singleton{}
-		foo1, err1 := GetOrDo(s, fn1)
-		foo2, err2 := GetOrDo(s, fn2)
+		foo1, err1 = GetOrDo(s, fn1)
+		foo2, err2 = GetOrDo(s, fn2)
 		assert.Equal(t, foo1, foo2)
 		assert.NoError(t, err1)
 		assert.NoError(t, err2)
@@ -42,22 +45,33 @@ func TestGetOrDo(t *testing.T) {
 
 	t.Run("should return same value for *T", func(t *testing.T) {
 		// Asseert fn1 and fn2 produce different results
-		assert.NotEqual(t, fn1Ptr(), fn2Ptr())
+		foo1, err1 := fn1Ptr()
+		foo2, err2 := fn2Ptr()
+		assert.NotEqual(t, foo1, foo2)
 
-		// Assert GetOrDo(s, fn1) and GetOrDo(s, fn2) produce the same result
+		// Assert GetOrDo(s, fn1Ptr) and GetOrDo(s, fn2Ptr) produce the same result
 		s := &Singleton{}
-		foo1, err1 := GetOrDo(s, fn1Ptr)
-		foo2, err2 := GetOrDo(s, fn2Ptr)
+		foo1, err1 = GetOrDo(s, fn1Ptr)
+		foo2, err2 = GetOrDo(s, fn2Ptr)
 		assert.Equal(t, foo1, foo2)
 		assert.NoError(t, err1)
 		assert.NoError(t, err2)
 	})
 
+	t.Run("should return error from fn", func(t *testing.T) {
+		s := &Singleton{}
+		expected := errors.New("foo")
+		_, err := GetOrDo(s, func() (string, error) {
+			return "", expected
+		})
+		assert.Equal(t, expected, err)
+	})
+
 	t.Run("should error when requested type doesn't match singleton type", func(t *testing.T) {
 		s := &Singleton{}
 		GetOrDo(s, fn1)
-		_, err := GetOrDo(s, func() string {
-			return "wrong type"
+		_, err := GetOrDo(s, func() (string, error) {
+			return "wrong type", nil
 		})
 		assert.Error(t, ErrTypeMismatch, err)
 	})
@@ -98,8 +112,8 @@ func BenchmarkGetOrDo(b *testing.B) {
 	b.Run("singleton.GetOrDo", func(b *testing.B) {
 		singleton := &Singleton{}
 		for i := 0; i < b.N; i++ {
-			_, _ = GetOrDo(singleton, func() Foo[int] {
-				return Foo[int]{t: 1}
+			_, _ = GetOrDo(singleton, func() (Foo[int], error) {
+				return Foo[int]{t: 1}, nil
 			})
 		}
 	})

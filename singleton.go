@@ -15,9 +15,10 @@ type Singleton struct {
 }
 
 // GetOrDo will create and store a value in the Singleton, if one doesn't already exist, by calling the fn, else it will return the existing value.
-// Returns ErrTypeMismatch if the requested type does not match a type the existing singleton type.
+// If the fn returns an error, that error will be returned and no value will be stored in the singleton.
+// If the requested type does not match a type the existing singleton type, ErrTypeMismatch is returned.
 // This function is threadsafe.
-func GetOrDo[T any](singleton *Singleton, fn func() T) (result T, err error) {
+func GetOrDo[T any](singleton *Singleton, fn func() (T, error)) (result T, err error) {
 	maybeResult := singleton.p.Load()
 	if maybeResult == nil {
 		// Lock to guard against applying fn twice
@@ -27,10 +28,12 @@ func GetOrDo[T any](singleton *Singleton, fn func() T) (result T, err error) {
 
 		// Double check
 		if maybeResult == nil {
-			result = fn()
-			var resultAny any = result
-			singleton.p.Store(&resultAny)
-			return result, nil
+			result, err = fn()
+			if err == nil {
+				var resultAny any = result
+				singleton.p.Store(&resultAny)
+			}
+			return result, err
 		}
 	}
 
