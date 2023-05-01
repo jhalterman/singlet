@@ -1,6 +1,7 @@
 # Singlet
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/jhalterman/singlet/test.yml)](https://github.com/jhalterman/singlet/actions/workflows/test.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jhalterman/singlet)](https://goreportcard.com/report/github.com/jhalterman/singlet)
 [![codecov](https://codecov.io/gh/jhalterman/singlet/branch/main/graph/badge.svg?token=VKVY1VTA1U)](https://codecov.io/gh/jhalterman/singlet)
 [![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 [![Godoc](https://pkg.go.dev/badge/github.com/jhalterman/singlet)](https://pkg.go.dev/github.com/jhalterman/singlet)
