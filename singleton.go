@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 )
 
+// ErrTypeMismatch is returned when trying to get a result for some type that is different from the stored type.
 var ErrTypeMismatch = errors.New("the requested type does not match the singleton type")
 
 // Singleton can store a single value atomically when used with GetOrDo.
