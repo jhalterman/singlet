@@ -19,7 +19,7 @@ type Singleton struct {
 // If the fn returns an error, that error will be returned and no value will be stored in the singleton.
 // If the requested type does not match a type the existing singleton type, ErrTypeMismatch is returned.
 // This function is threadsafe.
-func GetOrDo[T any](singleton *Singleton, fn func() (T, error)) (result T, err error) {
+func GetOrDo[T any](singleton *Singleton, fn func() (T, error)) (T, error) {
 	maybeResult := singleton.p.Load()
 	if maybeResult == nil {
 		// Lock to guard against applying fn twice
@@ -29,7 +29,7 @@ func GetOrDo[T any](singleton *Singleton, fn func() (T, error)) (result T, err e
 
 		// Double check
 		if maybeResult == nil {
-			result, err = fn()
+			result, err := fn()
 			if err == nil {
 				var resultAny any = result
 				singleton.p.Store(&resultAny)
@@ -38,12 +38,11 @@ func GetOrDo[T any](singleton *Singleton, fn func() (T, error)) (result T, err e
 		}
 	}
 
-	var ok bool
-	result, ok = (*maybeResult).(T)
-	if !ok {
+	if result, ok := (*maybeResult).(T); !ok {
 		return *new(T), ErrTypeMismatch
+	} else {
+		return result, nil
 	}
-	return result, nil
 }
 
 // Get returns a previously created value for the singleton, else the default value for T.
@@ -54,9 +53,9 @@ func Get[T any](singleton *Singleton) (T, error) {
 	if maybeResult == nil {
 		return *new(T), nil
 	}
-	result, ok := (*maybeResult).(T)
-	if !ok {
+	if result, ok := (*maybeResult).(T); !ok {
 		return *new(T), ErrTypeMismatch
+	} else {
+		return result, nil
 	}
-	return result, nil
 }
